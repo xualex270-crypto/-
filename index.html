@@ -17,7 +17,7 @@
             transition: opacity 1s ease;
         }
         .page.active { display: flex; }
-        .wrap { width: 340px; max-width: 340px; position: relative; }
+        .wrap { width: 280px; max-width: 280px; position: relative; }
 
         /* ========== 封面文字 ========== */
         h1 { text-align: center; font-size: 2.2rem; font-weight: normal; letter-spacing: 0.2em; margin-bottom: 1rem; }
@@ -752,16 +752,23 @@
          * ================================================================ */
         document.getElementById('btnEnter').addEventListener('click', function() { goToPage(1); });
         document.getElementById('btnReturnToCover').addEventListener('click', function() { goToPage(0); });
-        document.getElementById('scrollHint').addEventListener('click', function(e) {
-            var rect = this.getBoundingClientRect();
-            var clickY = e.clientY;
-            var mid = rect.top + rect.height / 2;
-            if (clickY < mid) {
-                goPrev();
+        // 箭头触摸滑动翻页
+        var hintTouchStartY = 0;
+        var hint = document.getElementById('scrollHint');
+        hint.addEventListener('touchstart', function(e) {
+            hintTouchStartY = e.touches[0].clientY;
+        }, { passive: true });
+        hint.addEventListener('touchend', function(e) {
+            var delta = hintTouchStartY - e.changedTouches[0].clientY;
+            if (Math.abs(delta) < 30) return; // 滑动距离不够
+            if (delta > 0) {
+                goNext();   // 上滑 → 下一页
             } else {
-                goNext();
+                goPrev();   // 下滑 → 上一页
             }
         });
+        // 桌面端保留点击兜底
+        hint.addEventListener('click', function() { goNext(); });
 
         window.addEventListener('keydown', function(e) {
             if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
