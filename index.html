@@ -221,7 +221,7 @@
         /* ========== 底部动态上箭头 ========== */
         .scroll-hint {
             position: fixed; bottom: 36px; left: 50%; transform: translateX(-50%);
-            z-index: 20; cursor: pointer;
+            z-index: 20; cursor: pointer; user-select: none; -webkit-user-select: none;
             font-size: 2.6rem; color: #fff; opacity: 0.85;
             text-shadow: 0 0 10px rgba(255,255,255,0.6), 0 0 22px rgba(255,255,255,0.35);
             animation: arrowBounce 2s ease-in-out infinite;
@@ -229,6 +229,19 @@
         @keyframes arrowBounce {
             0%, 100% { transform: translateX(-50%) translateY(0); }
             50%      { transform: translateX(-50%) translateY(-7px); }
+        }
+
+        /* ========== 顶部动态下箭头(返回上一页) ========== */
+        .scroll-hint-top {
+            position: fixed; top: 36px; left: 50%; transform: translateX(-50%);
+            z-index: 20; cursor: pointer; user-select: none; -webkit-user-select: none;
+            font-size: 2.6rem; color: #fff; opacity: 0.85;
+            text-shadow: 0 0 10px rgba(255,255,255,0.6), 0 0 22px rgba(255,255,255,0.35);
+            animation: arrowBounceDown 2s ease-in-out infinite;
+        }
+        @keyframes arrowBounceDown {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50%      { transform: translateX(-50%) translateY(7px); }
         }
 
         /* ========== 页面过渡 ========== */
@@ -242,6 +255,9 @@
 
     <!-- ==================== 封面落叶层(仅封面) ==================== -->
     <div id="cover-leaves"></div>
+
+    <!-- ==================== 顶部动态箭头(返回上一页) ==================== -->
+    <div class="scroll-hint-top" id="scrollHintTop">﹀</div>
 
     <!-- ==================== 底部动态箭头 ==================== -->
     <div class="scroll-hint" id="scrollHint">︿</div>
@@ -680,6 +696,14 @@
                 hint.style.display = '';
             }
 
+            // 封面隐藏顶部返回箭头
+            var hintTop = document.getElementById('scrollHintTop');
+            if (idx === 0) {
+                hintTop.style.display = 'none';
+            } else {
+                hintTop.style.display = '';
+            }
+
             var glowColors = [
                 '0 0 14px rgba(120,85,55,0.62), 0 0 30px rgba(120,85,55,0.40)',    // 封面-深棕
                 '0 0 14px rgba(130,100,75,0.62), 0 0 30px rgba(130,100,75,0.40)',   // 序-淡棕
@@ -690,6 +714,7 @@
                 '0 0 14px rgba(130,100,75,0.62), 0 0 30px rgba(130,100,75,0.40)'    // 尾声-淡棕
             ];
             document.getElementById('scrollHint').style.textShadow = glowColors[idx];
+            document.getElementById('scrollHintTop').style.textShadow = glowColors[idx];
         }
 
         /* ================================================================
@@ -769,6 +794,24 @@
         });
         // 桌面端保留点击兜底
         hint.addEventListener('click', function() { goNext(); });
+
+        // 顶部箭头 — 触摸滑动翻页(下滑→上一页)
+        var hintTop = document.getElementById('scrollHintTop');
+        var hintTopTouchStartY = 0;
+        hintTop.addEventListener('touchstart', function(e) {
+            hintTopTouchStartY = e.touches[0].clientY;
+        }, { passive: true });
+        hintTop.addEventListener('touchend', function(e) {
+            var delta = hintTopTouchStartY - e.changedTouches[0].clientY;
+            if (Math.abs(delta) < 30) return;
+            if (delta > 0) {
+                goNext();
+            } else {
+                goPrev();
+            }
+        });
+        // 桌面端点击 → 上一页
+        hintTop.addEventListener('click', function() { goPrev(); });
 
         window.addEventListener('keydown', function(e) {
             if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
