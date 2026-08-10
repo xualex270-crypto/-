@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>不说</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background-color: #ececef;
+            color: #444448;
+            font-family: "SimSun", "Noto Serif SC", serif;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* 首页落叶 */
+        .leaf {
+            position: fixed;
+            background: #d4bcac;
+            opacity: 0.17;
+            border-radius: 0 70% 0 70%;
+            pointer-events: none;
+            z-index:1;
+        }
+        /* 阅读页碎絮 */
+        .flake {
+            position: fixed;
+            background: #b0b0b8;
+            opacity:0.14;
+            pointer-events: none;
+            z-index:1;
+        }
+
+        /* ========== 首页视觉框架：复古四角装饰边框 ========== */
+        .frame-cover{
+            position:fixed;
+            inset:32px;
+            pointer-events:none;
+            z-index:2;
+            opacity:0.24;
+        }
+        .frame-cover::before,
+        .frame-cover::after{
+            content:"";
+            position:absolute;
+            width:72px;
+            height:72px;
+            border:1px solid #707078;
+        }
+        .frame-cover::before{
+            top:0;left:0;
+            border-right:none;
+            border-bottom:none;
+        }
+        .frame-cover::after{
+            bottom:0;right:0;
+            border-left:none;
+            border-top:none;
+        }
+        .frame-cover .corner-tl,
+        .frame-cover .corner-br{
+            position:absolute;
+            width:72px;
+            height:72px;
+            border:1px solid #707078;
+        }
+        .frame-cover .corner-tl{
+            bottom:0;left:0;
+            border-right:none;
+            border-top:none;
+        }
+        .frame-cover .corner-br{
+            top:0;right:0;
+            border-left:none;
+            border-bottom:none;
+        }
+
+        /* ========== 阅读页视觉框架：左右细长竖线版式 ========== */
+        .frame-read{
+            position:fixed;
+            inset:40px 60px;
+            pointer-events:none;
+            z-index:2;
+            opacity:0.22;
+            display:none;
+        }
+        .frame-read::before,
+        .frame-read::after{
+            content:"";
+            position:absolute;
+            top:0;
+            bottom:0;
+            width:1px;
+            background:#707078;
+        }
+        .frame-read::before{left:0;}
+        .frame-read::after{right:0;}
+
+
+        .page {
+            min-height:100vh;
+            display:flex;
+            flex-direction:column;
+            justify-content:center;
+            align-items:center;
+            padding: 40px 24px;
+            position:absolute;
+            width:100%;
+            top:0;
+            left:0;
+            z-index:3;
+        }
+        .page-2{
+            display:none;
+        }
+        .wrap {
+            max-width: 540px;
+        }
+        h1 {
+            font-weight: normal;
+            font-size: 40px;
+            margin-bottom: 24px;
+            color: #2c2c30;
+            letter-spacing: 12px;
+        }
+        .page-2 h1{
+            font-size:28px;
+            letter-spacing:6px;
+        }
+        .intro {
+            font-size: 16px;
+            color: #58585e;
+            margin-bottom: 48px;
+            letter-spacing:2px;
+        }
+        .divider {
+            width:90px;
+            height:1px;
+            background:#b8b8bd;
+            margin:36px 0;
+            transition: width 0.7s ease;
+        }
+        .wrap:hover .divider{
+            width:140px;
+        }
+        .text-quote {
+            font-size:16px;
+            color:#606068;
+            margin:12px 0 44px;
+        }
+        .content-text{
+            line-height:2.1;
+            font-size:16px;
+            color:#4c4c52;
+            margin-bottom:40px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 26px;
+            border: 1px solid #99999f;
+            color:#505057;
+            text-decoration: none;
+            font-size:15px;
+            background:transparent;
+            transition: all 0.5s ease;
+            position:relative;
+            cursor:pointer;
+        }
+        .btn::after{
+            content:"";
+            position:absolute;
+            left:0;
+            bottom:0;
+            width:0;
+            height:1px;
+            background:#777;
+            transition: width 0.5s ease;
+        }
+        .btn:hover::after{
+            width:100%;
+        }
+        .btn:hover {
+            color:#222;
+        }
+        footer {
+            margin-top:85px;
+            font-size:13px;
+            color:#94949b;
+            letter-spacing:1px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 封面页框架 四角装饰 -->
+    <div class="frame-cover">
+        <div class="corner-tl"></div>
+        <div class="corner-br"></div>
+    </div>
+    <!-- 阅读页框架 左右竖线 -->
+    <div class="frame-read"></div>
+
+<div class="page page-1">
+    <div class="wrap">
+        <h1>不说</h1>
+        <p class="intro">
+            半朵忍冬 · 长篇小说
+        </p>
+        <div class="divider"></div>
+        <p class="text-quote">
+            很多情绪没有出口，<br>
+            欢乐只是表层，底下沉睡着落寞。
+        </p>
+        <div class="btn" id="goRead">翻阅文本</div>
+        <footer>© 2026</footer>
+    </div>
+</div>
+
+<div class="page page-2">
+    <div class="wrap">
+        <h1>不说</h1>
+        <div class="divider"></div>
+        <div class="content-text">
+这里粘贴你的小说正文。<br>
+可以把大段文字直接放在这里，会自动换行。<br>
+示例段落：
+<br><br>
+黄昏落下来的时候，风卷着枯叶擦过窗沿。
+很多话最终咽回心底，只余下安静。
+        </div>
+        <div class="btn" id="goBack">返回</div>
+    </div>
+</div>
+
+<script>
+// 首页落叶动画
+const TOTAL_LEAVES = 22;
+function oneLeaf(){
+    const leaf = document.createElement('div');
+    leaf.className = 'leaf';
+    const size = 14 + Math.random()*18;
+    leaf.style.width = size + 'px';
+    leaf.style.height = size + 'px';
+    leaf.style.left = Math.random() * window.innerWidth + 'px';
+    leaf.style.top = '-40px';
+    document.body.appendChild(leaf);
+
+    const duration = 8000 + Math.random()*9000;
+    const rotateEnd = Math.random()*720;
+    let start = null;
+
+    function step(timestamp){
+        if(!start) start = timestamp;
+        const progress = timestamp - start;
+        const p = Math.min(progress / duration,1);
+        leaf.style.transform = `translateY(${p * (window.innerHeight + 80)}px) rotate(${rotateEnd*p}deg)`;
+        if(p < 1){
+            requestAnimationFrame(step);
+        }else{
+            leaf.remove();
+        }
+    }
+    requestAnimationFrame(step);
+}
+for(let i=0;i<TOTAL_LEAVES;i++){
+    oneLeaf();
+}
+
+// 阅读页碎絮动画
+const TOTAL_FLAKE = 26;
+let flakeList = [];
+function createFlake(){
+    const flake = document.createElement('div');
+    flake.className = 'flake';
+    const w = 2 + Math.random()*4;
+    const h = 12 + Math.random()*22;
+    flake.style.width = w + 'px';
+    flake.style.height = h + 'px';
+    flake.style.left = Math.random() * window.innerWidth + 'px';
+    flake.style.top = '-30px';
+    document.body.appendChild(flake);
+    flakeList.push(flake);
+
+    const duration = 6000 + Math.random()*7000;
+    let start = null;
+    function step(timestamp){
+        if(!start) start = timestamp;
+        const progress = timestamp - start;
+        const p = Math.min(progress/duration,1);
+        flake.style.transform = `translateY(${p*(window.innerHeight+60)}px)`;
+        if(p<1){
+            requestAnimationFrame(step);
+        }else{
+            flake.remove();
+        }
+    }
+    requestAnimationFrame(step);
+}
+function clearFlakes(){
+    flakeList.forEach(f=>f.remove());
+    flakeList = [];
+}
+
+// 页面切换逻辑
+const page1 = document.querySelector('.page-1');
+const page2 = document.querySelector('.page-2');
+const frameCover = document.querySelector('.frame-cover');
+const frameRead = document.querySelector('.frame-read');
+
+document.getElementById('goRead').addEventListener('click',()=>{
+    page1.style.display = 'none';
+    page2.style.display = 'flex';
+    frameCover.style.display = 'none';
+    frameRead.style.display = 'block';
+    for(let i=0;i<TOTAL_FLAKE;i++){
+        createFlake();
+    }
+});
+
+document.getElementById('goBack').addEventListener('click',()=>{
+    clearFlakes();
+    page2.style.display = 'none';
+    page1.style.display = 'flex';
+    frameRead.style.display = 'none';
+    frameCover.style.display = 'block';
+    for(let i=0;i<TOTAL_LEAVES;i++){
+        oneLeaf();
+    }
+});
+</script>
+</body>
+</html>
