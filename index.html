@@ -198,6 +198,26 @@
             100% { background-position: 45% 40%; }
         }
 
+        /* ========== 背景涟漪层 ========== */
+        #ripple-layer {
+            position: fixed; inset: 0; pointer-events: none; z-index: 0;
+        }
+        .ripple-ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.50);
+            transform: translate(-50%, -50%) scale(0);
+            animation: rippleExpand var(--dur, 5s) ease-out forwards;
+            pointer-events: none;
+            filter: blur(0.2px);
+            box-shadow: 0 0 6px rgba(255, 255, 255, 0.18), 0 0 14px rgba(255, 255, 255, 0.08);
+        }
+        @keyframes rippleExpand {
+            0%   { transform: translate(-50%, -50%) scale(0); opacity: 0.60; }
+            50%  { opacity: 0.22; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+        }
+
         /* ========== 底部动态上箭头 ========== */
         .scroll-hint {
             position: fixed; bottom: 36px; left: 50%; transform: translateX(-50%);
@@ -216,6 +236,9 @@
     </style>
 </head>
 <body>
+
+    <!-- ==================== 背景涟漪层 ==================== -->
+    <div id="ripple-layer"></div>
 
     <!-- ==================== 封面落叶层(仅封面) ==================== -->
     <div id="cover-leaves"></div>
@@ -339,7 +362,8 @@
             COVER_INTERVAL: 650,
             FADE_MS: 600,
             MAX: { rain: 12, snow: 28, butterfly: 10 },
-            SPAWN: { rain: 320, snow: 700, butterfly: 380 }
+            SPAWN: { rain: 320, snow: 700, butterfly: 380 },
+            RIPPLE: { MAX: 6, INTERVAL: 1800 }
         };
 
         /* ================================================================
@@ -417,6 +441,52 @@
             coverContainer.innerHTML = '';
             coverCount = 0;
             coverContainer.style.display = 'none';
+        }
+
+        /* ================================================================
+         *  背景涟漪(全域)
+         * ================================================================ */
+        var rippleContainer = document.getElementById('ripple-layer');
+        var rippleCount = 0;
+        var rippleTimer = null;
+
+        function createRipple() {
+            if (rippleCount >= CONFIG.RIPPLE.MAX) return;
+            var ring = document.createElement('div');
+            ring.className = 'ripple-ring';
+            var size = 60 + Math.random() * 200;
+            ring.style.width  = size + 'px';
+            ring.style.height = size + 'px';
+            ring.style.left = Math.random() * 100 + '%';
+            ring.style.top  = Math.random() * 100 + '%';
+            ring.style.setProperty('--dur', (4 + Math.random() * 5) + 's');
+            // 白色系随机微调透明度
+            var a = 0.30 + Math.random() * 0.28;
+            ring.style.borderColor = 'rgba(255,255,255,' + a.toFixed(2) + ')';
+            rippleContainer.appendChild(ring);
+            rippleCount++;
+
+            // 动画结束后清理
+            var dur = parseFloat(ring.style.getPropertyValue('--dur')) * 1000;
+            setTimeout(function() {
+                try { ring.remove(); } catch(e) {}
+                rippleCount--;
+            }, dur + 200);
+        }
+
+        function startRipples() {
+            if (rippleTimer) clearInterval(rippleTimer);
+            // 初始快速生成两三个
+            for (var i = 0; i < 3; i++) {
+                setTimeout(function() { createRipple(); }, i * 350);
+            }
+            rippleTimer = setInterval(createRipple, CONFIG.RIPPLE.INTERVAL);
+        }
+
+        function stopRipples() {
+            if (rippleTimer) { clearInterval(rippleTimer); rippleTimer = null; }
+            rippleContainer.innerHTML = '';
+            rippleCount = 0;
         }
 
         /* ================================================================
@@ -682,7 +752,16 @@
          * ================================================================ */
         document.getElementById('btnEnter').addEventListener('click', function() { goToPage(1); });
         document.getElementById('btnReturnToCover').addEventListener('click', function() { goToPage(0); });
-        document.getElementById('scrollHint').addEventListener('click', goNext);
+        document.getElementById('scrollHint').addEventListener('click', function(e) {
+            var rect = this.getBoundingClientRect();
+            var clickY = e.clientY;
+            var mid = rect.top + rect.height / 2;
+            if (clickY < mid) {
+                goPrev();
+            } else {
+                goNext();
+            }
+        });
 
         window.addEventListener('keydown', function(e) {
             if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
@@ -721,6 +800,7 @@
          *  初始化
          * ================================================================ */
         startCoverLeaves();
+        startRipples();
         updatePageStyle(0);
 
     })();
