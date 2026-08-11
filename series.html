@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>不说 — 系列丛书</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        /* ========== 页面底色（暗角亮心） ========== */
+        body {
+            min-height: 100vh;
+            background: radial-gradient(ellipse at 50% 45%, #5a4a38 0%, #3a2a18 38%, #1e1008 72%, #0a0400 100%);
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden;
+            font-family: "SimSun", "KaiTi", "STKaiti", "PingFang SC", "Microsoft YaHei", serif;
+        }
+
+        /* ========== 过渡动画容器 ========== */
+        .page-wrapper {
+            width: 100%; min-height: 100vh;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transform-origin: center center;
+            transition: none;
+            opacity: 0;
+        }
+        .page-wrapper.ready {
+            animation: blurIn 0.6s ease-out forwards;
+        }
+        @keyframes blurIn {
+            0%   { filter: blur(16px); opacity: 1; }
+            100% { filter: blur(0); opacity: 1; }
+        }
+        .page-wrapper.zooming {
+            animation: sweepOut 0.7s ease-in forwards;
+        }
+        @keyframes sweepOut {
+            0%   { clip-path: inset(0 0 0 0); opacity: 1; }
+            100% { clip-path: inset(0 100% 0 0); opacity: 0; }
+        }
+        .page-wrapper.fading-out {
+            animation: blurOut 0.5s ease-in forwards;
+        }
+        @keyframes blurOut {
+            0%   { filter: blur(0); opacity: 1; }
+            100% { filter: blur(16px); opacity: 1; }
+        }
+
+        /* ========== 落叶粒子 ========== */
+        #leaf-layer {
+            position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
+        }
+        .leaf-particle {
+            position: absolute; pointer-events: none;
+            background: #c8a060; border-radius: 0 70% 0 70%;
+            opacity: 0.16; will-change: transform;
+        }
+
+        /* ========== 柔光层（中心亮） ========== */
+        .glow {
+            position: fixed; inset: 0; pointer-events: none; z-index: 0;
+            background: radial-gradient(ellipse at 50% 45%, rgba(220,190,140,0.22) 0%, rgba(200,160,100,0.10) 30%, transparent 55%);
+        }
+
+        /* ========== 内容层 ========== */
+        .content {
+            position: relative; z-index: 2;
+            display: flex; flex-direction: column; align-items: center;
+            text-align: center; padding: 20px;
+        }
+
+        /* ========== 上方文字 ========== */
+        .series-label {
+            font-size: 0.78rem; letter-spacing: 0.24em;
+            color: rgba(210,190,160,0.7); margin-bottom: 28px;
+            text-transform: uppercase;
+        }
+        .ornament-top {
+            width: 1px; height: 36px;
+            background: linear-gradient(to bottom, transparent, rgba(200,170,120,0.5), transparent);
+            margin-bottom: 28px;
+        }
+
+        /* ========== 可点击的扇形书丛区域 ========== */
+        .books-fan {
+            display: block; cursor: pointer; user-select: none;
+            -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
+            outline: none; -webkit-touch-callout: none;
+            position: relative; z-index: 3;
+            width: 100%; max-width: 420px;
+            margin: 0 auto;
+        }
+        .books-fan:active { transform: scale(0.97); }
+        .books-fan.fading {
+            animation: imageFadeOut 0.35s ease-out forwards;
+        }
+        @keyframes imageFadeOut {
+            0%   { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        /* 书本横排容器 */
+        .book-row {
+            display: flex; align-items: flex-end; justify-content: center;
+            gap: 12px; flex-wrap: wrap;
+        }
+
+        /* 单本书卡片 */
+        .book-card {
+            width: 72px; height: 200px;
+            border-radius: 3px 6px 6px 3px;
+            position: relative; cursor: pointer;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex; align-items: center; justify-content: center;
+            border-left: 3px solid rgba(0,0,0,0.18);
+            text-decoration: none; -webkit-tap-highlight-color: transparent;
+            outline: none; user-select: none; -webkit-user-select: none;
+        }
+        .book-card:hover { transform: translateY(-4px); box-shadow: 0 8px 22px rgba(0,0,0,0.32); }
+        .book-card:active { transform: scale(0.95); }
+        .book-card.featured {
+            width: 82px; height: 200px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.30), 0 0 22px rgba(200,160,100,0.35);
+        }
+        .book-card.featured:hover {
+            box-shadow: 0 8px 28px rgba(0,0,0,0.36), 0 0 30px rgba(200,160,100,0.48);
+        }
+
+        /* 书脊纹理 */
+        .book-card::after {
+            content: "";
+            position: absolute; left: 6px; top: 0; bottom: 0;
+            width: 1px; background: rgba(255,255,255,0.12);
+        }
+
+        /* 书名 */
+        .book-card .card-label {
+            writing-mode: vertical-rl;
+            font-family: "SimSun", "KaiTi", "STKaiti", serif;
+            font-size: 0.78rem; letter-spacing: 0.14em;
+            color: rgba(255,255,255,0.78);
+            pointer-events: none;
+        }
+        .book-card.featured .card-label {
+            font-size: 0.9rem; font-weight: bold;
+            color: rgba(255,255,255,0.92);
+        }
+
+        /* 地面阴影 */
+        .fan-shadow {
+            width: 420px; height: 14px; margin: 8px auto 0;
+            background: radial-gradient(ellipse, rgba(0,0,0,0.30) 0%, rgba(0,0,0,0.08) 55%, transparent 72%);
+            border-radius: 50%; pointer-events: none;
+        }
+
+        /* 地面阴影（屏幕空间） */
+        .fan-shadow {
+            position: absolute; bottom: -8px; left: 50%;
+            transform: translateX(-50%);
+            width: 340px; height: 18px;
+            background: radial-gradient(ellipse, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.12) 50%, transparent 72%);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: shadowPulse 5s ease-in-out infinite;
+        }
+        @keyframes shadowPulse {
+            0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.7; }
+            50%      { transform: translateX(-50%) scale(0.92); opacity: 1; }
+        }
+
+        /* ========== 下方文字 ========== */
+        .ornament-bottom {
+            width: 1px; height: 36px;
+            background: linear-gradient(to bottom, rgba(200,170,120,0.5), transparent);
+            margin-top: 36px;
+        }
+        .series-hint {
+            font-size: 0.8rem; letter-spacing: 0.18em;
+            color: rgba(210,190,160,0.6); margin-top: 20px;
+            animation: hintPulse 3s ease-in-out infinite;
+        }
+        @keyframes hintPulse {
+            0%, 100% { opacity: 0.4; }
+            50%      { opacity: 1; }
+        }
+
+        /* ========== 返回链接 ========== */
+        .back-link {
+            position: fixed; top: 20px; left: 20px; z-index: 10;
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 0.85rem; color: rgba(210,190,160,0.65);
+            cursor: pointer; user-select: none; letter-spacing: 0.06em;
+            transition: color 0.4s; text-decoration: none;
+            font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+        }
+        .back-link:hover { color: rgba(230,210,180,0.9); }
+        .back-arrow { font-size: 1rem; }
+
+        /* ========== 响应式 ========== */
+        @media (max-width: 420px) {
+            .book-row { gap: 8px; }
+            .book-card { width: 64px; height: 170px; }
+            .book-card.featured { width: 74px; height: 170px; }
+            .book-card .card-label { font-size: 0.68rem; }
+            .book-card.featured .card-label { font-size: 0.78rem; }
+            .fan-shadow { width: 90%; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 落叶 -->
+    <div id="leaf-layer"></div>
+
+    <!-- 中心柔光 -->
+    <div class="glow"></div>
+
+    <!-- 页面包裹（用于过渡动画） -->
+    <div class="page-wrapper" id="pageWrapper">
+
+        <a class="back-link" href="index.html#6">
+            <span class="back-arrow">←</span> 返回
+        </a>
+
+        <div class="content">
+
+            <!-- 上方标签 -->
+            <div class="series-label">系 列 丛 书</div>
+            <div class="ornament-top"></div>
+
+            <!-- 可点击的扇形书丛（跳转购买页） -->
+            <div class="books-fan">
+                <div class="book-row">
+                    <a class="book-card" href="buy-shuangjiang.html" style="background:linear-gradient(to right,#7B5B3A,#6B4B30);"><span class="card-label">霜降</span></a>
+                    <a class="book-card" href="buy-dongzhi.html" style="background:linear-gradient(to right,#5A6070,#4A5058);"><span class="card-label">冬至</span></a>
+                    <a class="book-card" href="buy-jingzhe.html" style="background:linear-gradient(to right,#6B8B5A,#5B7B4A);"><span class="card-label">惊蛰</span></a>
+                    <a class="book-card" href="buy-liqiu.html" style="background:linear-gradient(to right,#A07048,#8B5A38);"><span class="card-label">立秋</span></a>
+                    <a class="book-card featured" href="buy.html" style="background:linear-gradient(to right,#D4C4A8,#C4B090);"><span class="card-label">不说</span></a>
+                    <a class="book-card" href="buy-mangzhong.html" style="background:linear-gradient(to right,#C89850,#B08038);"><span class="card-label">芒种</span></a>
+                    <a class="book-card" href="buy-bailu.html" style="background:linear-gradient(to right,#8B8590,#7B7580);"><span class="card-label">白露</span></a>
+                    <a class="book-card" href="buy-xiaoman.html" style="background:linear-gradient(to right,#7B9B6B,#6B8B5B);"><span class="card-label">小满</span></a>
+                </div>
+                <div class="fan-shadow"></div>
+            </div>
+
+            <!-- 下方提示 -->
+            <div class="ornament-bottom"></div>
+            <div class="series-hint">点 击 查 看</div>
+
+        </div>
+
+    </div>
+
+    <script>
+    (function() {
+        var pageWrapper = document.getElementById('pageWrapper');
+
+        // 页面加载淡入
+        requestAnimationFrame(function() {
+            requestAnimationFrame(function() {
+                pageWrapper.classList.add('ready');
+            });
+        });
+
+        // 返回链接淡出
+        var backLink = document.querySelector('.back-link');
+        if (backLink) {
+            backLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                var href = this.getAttribute('href');
+                pageWrapper.classList.add('fading-out');
+                setTimeout(function() {
+                    window.location.href = href;
+                }, 500);
+            });
+        }
+
+        /* ========== 落叶 ========== */
+        var leafLayer = document.getElementById('leaf-layer');
+        var leafCount = 0;
+        var LEAF_MAX = 16;
+
+        function createLeaf() {
+            if (leafCount >= LEAF_MAX) return;
+            var leaf = document.createElement('div');
+            leaf.className = 'leaf-particle';
+            var size = 14 + Math.random() * 18;
+            leaf.style.width  = size + 'px';
+            leaf.style.height = size + 'px';
+            leaf.style.left = Math.random() * 100 + '%';
+            leaf.style.top  = '-30px';
+            leafLayer.appendChild(leaf);
+            leafCount++;
+
+            var dur = 10000 + Math.random() * 8000;
+            var rot = Math.random() * 600;
+            var start = null;
+            function step(ts) {
+                if (!start) start = ts;
+                var p = Math.min((ts - start) / dur, 1);
+                leaf.style.transform = 'translateY(' + (p * 108) + 'vh) rotate(' + (rot * p) + 'deg)';
+                if (p < 1) requestAnimationFrame(step);
+                else { leaf.remove(); leafCount--; }
+            }
+            requestAnimationFrame(step);
+        }
+
+        setInterval(createLeaf, 800);
+
+    })();
+    </script>
+</body>
+</html>

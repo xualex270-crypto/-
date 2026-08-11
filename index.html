@@ -7,7 +7,12 @@
     <style>
         /* ========== 重置与基础 ========== */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: "SimSun", serif; font-weight: 600; -webkit-tap-highlight-color: transparent; outline: none; }
-        body { background: #f3f3f3; color: #333; min-height: 100vh; overflow-x: hidden; }
+        body { background: #f3f3f3; color: #333; min-height: 100vh; overflow-x: hidden; opacity: 0; }
+        body.ready { animation: bodyBlurIn 0.6s ease-out forwards; }
+        @keyframes bodyBlurIn {
+            0%   { filter: blur(14px); opacity: 1; }
+            100% { filter: blur(0); opacity: 1; }
+        }
 
         /* ========== 页面容器 ========== */
         .page {
@@ -62,6 +67,24 @@
             color: rgba(200,180,230,1);
             text-shadow: 0 0 12px rgba(200,180,240,0.7), 0 0 30px rgba(180,160,220,0.45), 0 0 50px rgba(150,130,200,0.25);
             box-shadow: 0 0 20px rgba(180,160,210,0.2), inset 0 0 20px rgba(180,160,210,0.06);
+        }
+        .btn-buy {
+            margin: 2rem auto 0; padding: 10px 32px;
+            border: 1px solid rgba(210,175,130,0.5); border-radius: 20px;
+            letter-spacing: 0.15em; font-size: 0.95rem;
+            transition: all 0.6s;
+            color: rgba(200,160,110,0.9);
+            text-shadow: 0 0 8px rgba(210,170,120,0.5), 0 0 20px rgba(190,150,100,0.3), 0 0 40px rgba(170,130,80,0.15);
+            background: rgba(255,255,255,0.04);
+            backdrop-filter: blur(2px);
+        }
+        .btn-buy:hover {
+            background: rgba(230,210,180,0.12);
+            border-color: rgba(220,190,150,0.7);
+            letter-spacing: 0.22em;
+            color: rgba(220,180,130,1);
+            text-shadow: 0 0 12px rgba(220,190,150,0.7), 0 0 30px rgba(200,170,130,0.45), 0 0 50px rgba(170,140,100,0.25);
+            box-shadow: 0 0 20px rgba(200,170,130,0.2), inset 0 0 20px rgba(200,170,130,0.06);
         }
         footer { text-align: center; margin-top: 12rem; font-size: 0.85rem; color: #666; }
 
@@ -365,6 +388,7 @@
             <p>当年少年四散于人海，那些淤积在喉头的欢喜、委屈、惦念与不舍，再无人倾听，亦无从诉说。</p>
             <p>万般心事，无处投递，只托付给岁岁年年，往复飘零的落叶。</p>
             <div class="btn btn-return" tabindex="0" id="btnReturnToCover">返初见</div>
+            <div class="btn btn-buy" tabindex="0" id="btnBuy">更多丛书</div>
         </div>
     </div>
 
@@ -777,6 +801,7 @@
          * ================================================================ */
         document.getElementById('btnEnter').addEventListener('click', function() { goToPage(1); });
         document.getElementById('btnReturnToCover').addEventListener('click', function() { goToPage(0); });
+        document.getElementById('btnBuy').addEventListener('click', function() { window.location.href = 'series.html'; });
         // 箭头触摸滑动翻页
         var hintTouchStartY = 0;
         var hint = document.getElementById('scrollHint');
@@ -849,9 +874,35 @@
         /* ================================================================
          *  初始化
          * ================================================================ */
-        startCoverLeaves();
+        // 检查 URL hash 锚点（如 index.html#6 直接跳到第6页）
+        var hash = window.location.hash;
+        var startPage = 0;
+        if (hash) {
+            var p = parseInt(hash.replace('#', ''));
+            if (!isNaN(p) && p >= 0 && p < TOTAL_PAGES) {
+                startPage = p;
+            }
+        }
+
+        if (startPage !== 0) {
+            // 直接从指定页开始，跳过封面
+            pages[0].classList.remove('active');
+            pages[startPage].classList.add('active');
+            currentPage = startPage;
+            startParticlesForPage(startPage);
+            updatePageStyle(startPage);
+        } else {
+            startCoverLeaves();
+            updatePageStyle(0);
+        }
         startRipples();
-        updatePageStyle(0);
+
+        // 从外部页面进入时淡入（模糊→清晰）
+        requestAnimationFrame(function() {
+            requestAnimationFrame(function() {
+                document.body.classList.add('ready');
+            });
+        });
 
     })();
     </script>
