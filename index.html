@@ -402,6 +402,8 @@
     </div>
 
     <script>
+    // 预加载所有封面图（new Image 强制浏览器立即下载）
+    ['偏移.jpg','证人.jpg','临界线.jpg','未归档.jpg','虚位.jpg','过境.jpg','既定域.jpg'].forEach(function(s){var i=new Image();i.src=s;});
     (function() {
         /* ================================================================
          *  配置
