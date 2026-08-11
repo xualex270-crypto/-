@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>不说 — 文随远思 卷伴闲行</title>
+    <link rel="preload" as="image" href="cover.jpg">
+    <link rel="preload" as="image" href="偏移.jpg">
+    <link rel="preload" as="image" href="证人.jpg">
+    <link rel="preload" as="image" href="临界线.jpg">
+    <link rel="preload" as="image" href="未归档.jpg">
+    <link rel="preload" as="image" href="虚位.jpg">
+    <link rel="preload" as="image" href="过境.jpg">
+    <link rel="preload" as="image" href="既定域.jpg">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
@@ -236,6 +244,8 @@
     </div>
 
     <script>
+    // 预加载所有封面图（承接 index 未完成的缓存 + 本页停留时间足够全部下完）
+    ['cover.jpg','偏移.jpg','证人.jpg','临界线.jpg','未归档.jpg','虚位.jpg','过境.jpg','既定域.jpg'].forEach(function(s){var i=new Image();i.src=s;});
     (function() {
         var pageWrapper = document.getElementById('pageWrapper');
 
