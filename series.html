@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>不说 — 文随远思 卷伴闲行</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        /* ========== 页面底色（暗角亮心） ========== */
+        body {
+            min-height: 100vh;
+            background: radial-gradient(ellipse at 50% 45%, #f5f0e4 0%, #c8b088 16%, #6a5038 42%, #1a0e04 100%);
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden;
+            font-family: "SimSun", "KaiTi", "STKaiti", "PingFang SC", "Microsoft YaHei", serif;
+        }
+
+        /* ========== 过渡动画容器 ========== */
+        .page-wrapper {
+            width: 100%; min-height: 100vh;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transform-origin: center center;
+            transition: none;
+            opacity: 0;
+        }
+        .page-wrapper.ready {
+            animation: blurIn 0.6s ease-out forwards;
+        }
+        @keyframes blurIn {
+            0%   { filter: blur(16px); opacity: 1; }
+            100% { filter: blur(0); opacity: 1; }
+        }
+        .page-wrapper.zooming {
+            animation: sweepOut 0.7s ease-in forwards;
+        }
+        @keyframes sweepOut {
+            0%   { clip-path: inset(0 0 0 0); opacity: 1; }
+            100% { clip-path: inset(0 100% 0 0); opacity: 0; }
+        }
+        .page-wrapper.fading-out {
+            animation: blurOut 0.5s ease-in forwards;
+        }
+        @keyframes blurOut {
+            0%   { filter: blur(0); opacity: 1; }
+            100% { filter: blur(16px); opacity: 1; }
+        }
+
+        /* ========== 柔光层（中心亮） ========== */
+        .glow {
+            position: fixed; inset: 0; pointer-events: none; z-index: 0;
+            background: radial-gradient(ellipse at 50% 45%, rgba(220,190,140,0.22) 0%, rgba(200,160,100,0.10) 30%, transparent 55%);
+        }
+
+        /* ========== 内容层 ========== */
+        .content {
+            position: relative; z-index: 2;
+            display: flex; flex-direction: column; align-items: center;
+            text-align: center; padding: 20px;
+        }
+
+        /* ========== 上方文字 ========== */
+        .series-label {
+            font-family: "KaiTi", "STKaiti", "FangSong", serif;
+            font-size: 0.82rem; letter-spacing: 0.32em;
+            color: rgba(210,190,160,0.65); margin-bottom: 28px;
+        }
+        .ornament-top {
+            width: 1px; height: 36px;
+            background: linear-gradient(to bottom, transparent, rgba(200,170,120,0.5), transparent);
+            margin-bottom: 28px;
+        }
+
+        /* ========== 可点击的扇形书丛区域 ========== */
+        .books-fan {
+            display: block; cursor: pointer; user-select: none;
+            -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
+            outline: none; -webkit-touch-callout: none;
+            position: relative; z-index: 3;
+            width: 100%; max-width: 420px;
+            margin: 0 auto;
+        }
+        .books-fan:active { transform: scale(0.97); }
+        .books-fan.fading {
+            animation: imageFadeOut 0.35s ease-out forwards;
+        }
+        @keyframes imageFadeOut {
+            0%   { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        /* 书本横排容器 */
+        .book-row {
+            display: flex; align-items: flex-end; justify-content: center;
+            gap: 12px; flex-wrap: wrap;
+        }
+
+        /* 单本书卡片 */
+        .book-card {
+            width: 56px; height: 200px;
+            border-radius: 2px 6px 6px 2px;
+            position: relative; cursor: pointer;
+            box-shadow:
+                0 6px 22px rgba(80,50,20,0.16),
+                0 2px 5px rgba(80,50,20,0.07);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex; align-items: center; justify-content: center;
+            border-left: 3px solid rgba(0,0,0,0.12);
+            text-decoration: none; -webkit-tap-highlight-color: transparent;
+            outline: none; user-select: none; -webkit-user-select: none;
+        }
+        /* 内折线 */
+        .book-card::after {
+            content: "";
+            position: absolute; left: 6px; top: 5px; bottom: 5px;
+            width: 1px; background: rgba(0,0,0,0.05);
+        }
+        .book-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(80,50,20,0.22), 0 3px 8px rgba(80,50,20,0.08); }
+        .book-card:active { transform: scale(0.95); }
+        .book-card.featured {
+            width: 64px; height: 200px;
+            box-shadow:
+                0 8px 28px rgba(80,50,20,0.20),
+                0 2px 7px rgba(80,50,20,0.08),
+                0 0 20px rgba(200,160,100,0.25);
+        }
+        .book-card.featured:hover {
+            box-shadow:
+                0 14px 36px rgba(80,50,20,0.26),
+                0 4px 10px rgba(80,50,20,0.12),
+                0 0 28px rgba(200,160,100,0.35);
+        }
+
+        /* 书名 */
+        .book-card .card-label {
+            writing-mode: vertical-rl;
+            font-family: var(--font, "SimSun", "KaiTi", serif);
+            font-size: 0.76rem; letter-spacing: 0.12em;
+            pointer-events: none;
+            transform: translateY(-16px);
+        }
+        .book-card.featured .card-label {
+            font-size: 0.88rem; font-weight: bold;
+        }
+
+        /* 地面阴影 */
+        .fan-shadow {
+            width: 420px; height: 14px; margin: 8px auto 0;
+            background: radial-gradient(ellipse, rgba(0,0,0,0.30) 0%, rgba(0,0,0,0.08) 55%, transparent 72%);
+            border-radius: 50%; pointer-events: none;
+        }
+
+        /* 地面阴影（屏幕空间） */
+        .fan-shadow {
+            position: absolute; bottom: -8px; left: 50%;
+            transform: translateX(-50%);
+            width: 340px; height: 18px;
+            background: radial-gradient(ellipse, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.12) 50%, transparent 72%);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: shadowPulse 5s ease-in-out infinite;
+        }
+        @keyframes shadowPulse {
+            0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.7; }
+            50%      { transform: translateX(-50%) scale(0.92); opacity: 1; }
+        }
+
+        /* ========== 下方文字 ========== */
+        .ornament-bottom {
+            width: 1px; height: 36px;
+            background: linear-gradient(to bottom, rgba(200,170,120,0.5), transparent);
+            margin-top: 36px;
+        }
+        /* ========== 返回链接 ========== */
+        .back-link {
+            position: fixed; top: 20px; left: 20px; z-index: 10;
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 0.85rem; color: rgba(210,190,160,0.22);
+            cursor: pointer; user-select: none; letter-spacing: 0.06em;
+            transition: color 0.4s; text-decoration: none;
+            font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+        }
+        .back-link:hover { color: rgba(235,220,195,0.85); }
+        .back-arrow { font-size: 1rem; }
+
+        /* ========== 响应式 ========== */
+        @media (max-width: 420px) {
+            .book-row { gap: 8px; }
+            .book-card { width: 64px; height: 170px; }
+            .book-card.featured { width: 74px; height: 170px; }
+            .book-card .card-label { font-size: 0.68rem; }
+            .book-card.featured .card-label { font-size: 0.78rem; }
+            .fan-shadow { width: 90%; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 中心柔光 -->
+    <div class="glow"></div>
+
+    <!-- 页面包裹（用于过渡动画） -->
+    <div class="page-wrapper" id="pageWrapper">
+
+        <a class="back-link" href="index.html#6">
+            <span class="back-arrow">←</span> 返回
+        </a>
+
+        <div class="content">
+
+            <!-- 上方标签 -->
+            <div class="series-label">文随远思&emsp;&emsp;卷伴闲行</div>
+            <div class="ornament-top"></div>
+
+            <!-- 可点击的扇形书丛（跳转购买页） -->
+            <div class="books-fan">
+                <div class="book-row">
+                    <a class="book-card" href="buy-pianyi.html" style="background:linear-gradient(155deg,#b8b4ae,#a09c96,#8a8680,#98948e,#a8a4a0);--font:'FangSong','STFangsong',serif;color:rgba(255,255,255,0.82);"><span class="card-label">偏移</span></a>
+                    <a class="book-card" href="buy-zhengren.html" style="background:linear-gradient(155deg,#f5f0e4,#ebe4d4,#e0d8c4,#e8e0d0,#f0e8dc);--font:'SimSun','STSong',serif;color:#4a3830;"><span class="card-label">证人</span></a>
+                    <a class="book-card" href="buy-linjiexian.html" style="background:linear-gradient(155deg,#c8d4dc,#b4c2cc,#a0b0bc,#b0bec8,#c0ccd4);--font:'KaiTi','STKaiti',serif;color:#3a3038;"><span class="card-label">临界线</span></a>
+                    <a class="book-card" href="buy-weiguidang.html" style="background:linear-gradient(155deg,#f0ece0,#e8e0d0,#dcd4c0,#e4dcc8,#ece4d4);--font:'KaiTi','STKaiti','FangSong',serif;color:#3a2818;font-weight:bold;"><span class="card-label">未归档</span></a>
+                    <a class="book-card featured" href="buy.html" style="background:linear-gradient(155deg,#faf6ec,#ece0c8,#dcccac,#e8d8b8,#f5ecd8);--font:'KaiTi','STKaiti',serif;color:#4a3830;"><span class="card-label">不说</span></a>
+                    <a class="book-card" href="buy-xuwei.html" style="background:linear-gradient(155deg,#f8f6f0,#f0ece4,#e8e4dc,#eeeae2,#f4f0e8);--font:'FangSong','STFangsong',serif;color:#4a4038;"><span class="card-label">虚位</span></a>
+                    <a class="book-card" href="buy-guojing.html" style="background:linear-gradient(155deg,#8894a2,#607080,#4a5a6a,#5a6a78,#6a7a88);--font:'SimHei','Microsoft YaHei',sans-serif;color:rgba(255,255,255,0.82);"><span class="card-label">过境</span></a>
+                    <a class="book-card" href="buy-jidingyu.html" style="background:linear-gradient(155deg,#fafaf8,#f4f2ee,#ecece8,#f2f0ec,#f8f6f2);--font:'FangSong','STFangsong',serif;color:#4a4038;"><span class="card-label">既定域</span></a>
+                </div>
+                <div class="fan-shadow"></div>
+            </div>
+
+            <!-- 下方提示 -->
+            <div class="ornament-bottom"></div>
+
+
+        </div>
+
+    </div>
+
+    <script>
+    (function() {
+        var pageWrapper = document.getElementById('pageWrapper');
+
+        // 页面加载淡入
+        requestAnimationFrame(function() {
+            requestAnimationFrame(function() {
+                pageWrapper.classList.add('ready');
+            });
+        });
+
+        // 返回链接淡出
+        var backLink = document.querySelector('.back-link');
+        if (backLink) {
+            backLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                var href = this.getAttribute('href');
+                pageWrapper.classList.add('fading-out');
+                setTimeout(function() {
+                    window.location.href = href;
+                }, 500);
+            });
+        }
+
+    })();
+    </script>
+</body>
+</html>

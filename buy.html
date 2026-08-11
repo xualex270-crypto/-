@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>不说 — 购买</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        :root {
+            --bg: #f7f4ef;
+            --text: #3a3028;
+            --muted: #8a7a68;
+            --accent: #b48648;
+            --accent-deep: #8a5a30;
+            --card: #fffdf9;
+            --border: #e5ddd0;
+            --shadow: rgba(120,80,40,0.06);
+        }
+
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", -apple-system, sans-serif;
+            background: var(--bg); color: var(--text); min-height: 100vh;
+            line-height: 1.8; letter-spacing: 0.04em;
+            opacity: 0;
+        }
+        body.ready {
+            animation: sweepIn 0.8s ease-out forwards;
+        }
+        @keyframes sweepIn {
+            0%   { filter: blur(18px); opacity: 1; }
+            100% { filter: blur(0); opacity: 1; }
+        }
+        body.fading-out {
+            animation: blurOut 0.5s ease-in forwards;
+        }
+        @keyframes blurOut {
+            0%   { filter: blur(0); opacity: 1; }
+            100% { filter: blur(18px); opacity: 1; }
+        }
+
+        /* ========== 落叶粒子 ========== */
+        #leaf-layer {
+            position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
+        }
+        .leaf-particle {
+            position: absolute; pointer-events: none;
+            background: #c8a060; border-radius: 0 70% 0 70%;
+            opacity: 0.10; will-change: transform;
+        }
+
+        /* ========== 主容器 ========== */
+        .main {
+            position: relative; z-index: 1;
+            max-width: 420px; margin: 0 auto; padding: 0 28px 120px;
+        }
+
+        /* ========== 返回 ========== */
+        .back-link {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 24px 0 8px; font-size: 0.85rem; color: var(--muted);
+            cursor: pointer; user-select: none; letter-spacing: 0.06em;
+            transition: color 0.3s; text-decoration: none;
+        }
+        .back-link:hover { color: var(--accent-deep); }
+        .back-arrow { font-size: 1.1rem; }
+
+        /* ========== 封面区 ========== */
+        .hero {
+            display: flex; flex-direction: column; align-items: center;
+            padding: 48px 0 40px;
+        }
+        .cover-img {
+            width: 200px; height: 280px; object-fit: cover;
+            border-radius: 3px 12px 12px 3px;
+            box-shadow:
+                0 20px 50px rgba(80,50,20,0.18),
+                0 4px 12px rgba(80,50,20,0.10);
+            border-left: 4px solid rgba(0,0,0,0.12);
+            display: block;
+        }
+
+        /* ========== 标题与作者 ========== */
+        .book-info { text-align: center; padding: 0 0 36px; }
+        .book-name {
+            font-family: "SimSun", "KaiTi", "STKaiti", serif;
+            font-size: 1.5rem; letter-spacing: 0.18em; font-weight: bold;
+        }
+        .book-author {
+            font-size: 0.88rem; color: var(--muted); margin-top: 6px;
+            letter-spacing: 0.1em;
+        }
+        .book-tagline {
+            font-size: 0.82rem; color: #b0a090; margin-top: 10px;
+            font-style: italic; letter-spacing: 0.06em;
+        }
+
+        /* ========== 分隔线 ========== */
+        .ornament {
+            width: 60px; height: 1px; background: #d0c8b8;
+            margin: 0 auto 36px;
+        }
+
+        /* ========== 简介卡片 ========== */
+        .card {
+            background: var(--card); border-radius: 12px;
+            padding: 28px 22px; margin-bottom: 16px;
+            box-shadow: 0 2px 12px var(--shadow);
+            border: 1px solid var(--border);
+        }
+        .card-label {
+            font-size: 0.72rem; color: #b0a090; letter-spacing: 0.12em;
+            text-transform: uppercase; margin-bottom: 12px;
+        }
+        .card p {
+            font-size: 0.88rem; line-height: 2.2; color: #5a4a3a;
+            text-align: justify; text-indent: 0;
+        }
+
+        /* ========== 信息行 ========== */
+        .info-grid {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 12px; margin-bottom: 16px;
+        }
+        .info-item {
+            background: var(--card); border-radius: 10px;
+            padding: 18px 16px; text-align: center;
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 8px var(--shadow);
+        }
+        .info-item .info-value {
+            font-family: "SimSun", "KaiTi", "STKaiti", serif;
+            font-size: 1.05rem; color: var(--text); letter-spacing: 0.06em;
+        }
+        .info-item .info-label {
+            font-size: 0.7rem; color: #b0a090; margin-top: 4px; letter-spacing: 0.08em;
+        }
+
+        /* ========== 价格 ========== */
+        .price-card {
+            display: flex; align-items: center; justify-content: center;
+            gap: 16px; padding: 24px 0 8px;
+        }
+        .price-current {
+            font-family: "Georgia", "SimSun", serif;
+            font-size: 2.4rem; color: #6a4020; letter-spacing: 0.04em;
+        }
+        .price-current .yen { font-size: 1.2rem; }
+        .price-original {
+            font-size: 0.9rem; color: #c0b0a0; text-decoration: line-through;
+        }
+
+        /* ========== 购买按钮 ========== */
+        .buy-section { text-align: center; padding: 20px 0 40px; }
+        .btn-buy {
+            display: inline-block; padding: 14px 60px;
+            font-size: 1rem; letter-spacing: 0.14em;
+            font-family: "SimSun", "KaiTi", "STKaiti", serif;
+            color: #fff;
+            background: linear-gradient(135deg, #b48648 0%, #9a6a38 100%);
+            border: none; border-radius: 28px; cursor: pointer;
+            box-shadow: 0 4px 16px rgba(140,100,50,0.25);
+            transition: all 0.4s; user-select: none;
+        }
+        .btn-buy:hover {
+            box-shadow: 0 6px 24px rgba(140,100,50,0.38);
+            transform: translateY(-1px);
+            letter-spacing: 0.2em;
+        }
+        .btn-buy:active {
+            transform: scale(0.97);
+            box-shadow: 0 2px 8px rgba(140,100,50,0.2);
+        }
+        .buy-note {
+            font-size: 0.72rem; color: #c0b0a0; margin-top: 14px;
+            letter-spacing: 0.06em;
+        }
+
+        /* ========== 弹窗 ========== */
+        .modal-overlay {
+            position: fixed; inset: 0; z-index: 200;
+            background: rgba(30,20,10,0.55); display: none;
+            align-items: center; justify-content: center;
+            backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+        }
+        .modal-overlay.show { display: flex; }
+        .modal-dialog {
+            width: 300px; background: #fffdf9; border-radius: 16px;
+            padding: 32px 24px 24px; text-align: center;
+            box-shadow: 0 20px 50px rgba(40,20,0,0.25);
+            animation: modalIn 0.35s ease-out;
+        }
+        @keyframes modalIn {
+            from { opacity: 0; transform: translateY(24px) scale(0.94); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .modal-dialog h3 {
+            font-family: "SimSun", "KaiTi", "STKaiti", serif;
+            font-size: 1.2rem; letter-spacing: 0.1em; margin-bottom: 8px;
+        }
+        .modal-dialog .modal-price {
+            font-size: 1.6rem; color: #6a4020; margin-bottom: 20px;
+            font-family: "Georgia", serif;
+        }
+        .modal-qty {
+            display: inline-flex; align-items: center; gap: 16px;
+            margin-bottom: 24px;
+        }
+        .modal-qty button {
+            width: 34px; height: 34px; border-radius: 50%;
+            border: 1px solid #d0c8b8; background: #fffdf9;
+            font-size: 1.1rem; color: #8a6a40; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s; user-select: none;
+        }
+        .modal-qty button:active { background: #f5efe4; }
+        .modal-qty button.disabled { color: #d0c8b8; border-color: #e8e0d4; pointer-events: none; }
+        .modal-qty .qty-num { font-size: 1.1rem; min-width: 24px; font-weight: 600; }
+        .btn-confirm {
+            width: 100%; padding: 13px 0; border-radius: 24px; border: none;
+            background: linear-gradient(135deg, #b48648, #9a6a38);
+            color: #fff; font-size: 0.95rem; letter-spacing: 0.1em;
+            font-family: "SimSun", "KaiTi", "STKaiti", serif;
+            cursor: pointer; transition: all 0.3s;
+        }
+        .btn-confirm:active { opacity: 0.85; transform: scale(0.97); }
+        .btn-cancel {
+            margin-top: 12px; font-size: 0.8rem; color: #b0a090;
+            cursor: pointer; user-select: none; letter-spacing: 0.06em;
+        }
+
+        /* ========== Toast ========== */
+        .toast {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
+            background: rgba(30,20,10,0.82); color: #f0e8d8; padding: 14px 28px;
+            border-radius: 8px; font-size: 0.9rem; z-index: 300;
+            pointer-events: none; opacity: 0; transition: opacity 0.4s;
+            letter-spacing: 0.06em;
+        }
+        .toast.show { opacity: 1; }
+
+        /* ========== 响应式 ========== */
+        @media (max-width: 380px) {
+            .main { padding: 0 20px 100px; }
+            .cover { width: 170px; height: 238px; }
+            .hero { padding: 36px 0 30px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 落叶 -->
+    <div id="leaf-layer"></div>
+
+    <!-- 主内容 -->
+    <div class="main">
+
+        <a class="back-link" href="series.html">
+            <span class="back-arrow">←</span> 返回
+        </a>
+
+        <!-- 封面 -->
+        <div class="hero">
+            <img class="cover-img" src="cover.jpg" alt="不说">
+        </div>
+
+        <!-- 书名 -->
+        <div class="book-info">
+            <div class="book-name">不说</div>
+            <div class="book-author">半朵忍冬 · 著</div>
+            <div class="book-tagline">很多情绪没有出口，欢乐只是表层，底下沉睡着落寞。</div>
+        </div>
+
+        <div class="ornament"></div>
+
+        <!-- 简介 -->
+        <div class="card">
+            <div class="card-label">内容简介</div>
+            <p>
+                三载少年光阴，皆寄于校门口那株老梧桐。秋风漫过跑道，碎叶簌簌铺就一地昏黄。许许多多未曾袒露的悸动，悄悄栖居于日常的缝隙。五人相伴嬉游，误以为喧嚣欢宴可以无尽绵延。彼时尚不识人心千折百转，天真以为陪伴便能消解所有沉默。四季轮转往复，那些淤积在喉头的欢喜、委屈、惦念与不舍，只托付给岁岁年年往复飘零的落叶。
+            </p>
+        </div>
+
+        <!-- 信息 -->
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-value">320页</div>
+                <div class="info-label">平装</div>
+            </div>
+            <div class="info-item">
+                <div class="info-value">2026</div>
+                <div class="info-label">出版年份</div>
+            </div>
+            <div class="info-item">
+                <div class="info-value">不说文化</div>
+                <div class="info-label">出版社</div>
+            </div>
+            <div class="info-item">
+                <div class="info-value">包邮</div>
+                <div class="info-label">配送方式</div>
+            </div>
+        </div>
+
+        <!-- 价格 -->
+        <div class="price-card">
+            <span class="price-original">¥78.00</span>
+            <span class="price-current"><span class="yen">¥</span>48.00</span>
+        </div>
+
+        <!-- 购买按钮 -->
+        <div class="buy-section">
+            <button class="btn-buy" id="btnBuy">购 买</button>
+            <div class="buy-note">正版保障 · 7天无理由退换 · 48小时发货</div>
+        </div>
+
+    </div>
+
+    <!-- 确认弹窗 -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-dialog">
+            <h3>《不说》</h3>
+            <div class="modal-price">¥48.00</div>
+            <div class="modal-qty">
+                <button class="disabled" id="modalMinus">−</button>
+                <span class="qty-num" id="modalQty">1</span>
+                <button id="modalPlus">+</button>
+            </div>
+            <button class="btn-confirm" id="modalConfirm">确认购买</button>
+            <div class="btn-cancel" id="modalCancel">再想想</div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+    (function() {
+        // 等浏览器完成首次绘制后再触发淡入，避免动画"被跳过"
+        requestAnimationFrame(function() {
+            requestAnimationFrame(function() {
+                document.body.classList.add('ready');
+            });
+        });
+
+        /* ========== 返回链接（淡出过渡） ========== */
+        var backLink = document.querySelector('.back-link');
+        if (backLink) {
+            backLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                var href = this.getAttribute('href');
+                document.body.classList.add('fading-out');
+                setTimeout(function() {
+                    window.location.href = href;
+                }, 500);
+            });
+        }
+
+        /* ========== 落叶 ========== */
+        var leafLayer = document.getElementById('leaf-layer');
+        var leafCount = 0;
+        var LEAF_MAX = 14;
+
+        function createLeaf() {
+            if (leafCount >= LEAF_MAX) return;
+            var leaf = document.createElement('div');
+            leaf.className = 'leaf-particle';
+            var size = 14 + Math.random() * 16;
+            leaf.style.width  = size + 'px';
+            leaf.style.height = size + 'px';
+            leaf.style.left = Math.random() * 100 + '%';
+            leaf.style.top  = '-30px';
+            leafLayer.appendChild(leaf);
+            leafCount++;
+
+            var dur = 9000 + Math.random() * 8000;
+            var rot = Math.random() * 540;
+            var start = null;
+            function step(ts) {
+                if (!start) start = ts;
+                var p = Math.min((ts - start) / dur, 1);
+                leaf.style.transform = 'translateY(' + (p * 108) + 'vh) rotate(' + (rot * p) + 'deg)';
+                if (p < 1) requestAnimationFrame(step);
+                else { leaf.remove(); leafCount--; }
+            }
+            requestAnimationFrame(step);
+        }
+
+        setInterval(createLeaf, 900);
+
+        /* ========== 数量 ========== */
+        var qty = 1;
+        var MIN = 1, MAX = 99;
+
+        function updateQtyUI() {
+            document.getElementById('modalQty').textContent = qty;
+            document.getElementById('modalMinus').classList.toggle('disabled', qty <= MIN);
+            document.getElementById('modalPlus').classList.toggle('disabled', qty >= MAX);
+        }
+
+        function changeQty(delta) {
+            var n = qty + delta;
+            if (n < MIN || n > MAX) return;
+            qty = n; updateQtyUI();
+        }
+
+        document.getElementById('modalMinus').addEventListener('click', function() { changeQty(-1); });
+        document.getElementById('modalPlus').addEventListener('click', function() { changeQty(1); });
+
+        /* ========== 弹窗 ========== */
+        var overlay = document.getElementById('modalOverlay');
+
+        function openModal() {
+            qty = 1; updateQtyUI(); overlay.classList.add('show');
+        }
+        function closeModal() { overlay.classList.remove('show'); }
+
+        overlay.addEventListener('click', function(e) {
+            if (e.target === overlay) closeModal();
+        });
+        document.getElementById('modalCancel').addEventListener('click', closeModal);
+
+        document.getElementById('modalConfirm').addEventListener('click', function() {
+            closeModal();
+            var bn = document.querySelector('.book-name').textContent;
+            var cv = document.querySelector('.cover-img').getAttribute('src');
+            window.location.href = 'pay.html?book=' + encodeURIComponent(bn) + '&price=48.00&qty=' + qty + '&cover=' + encodeURIComponent(cv);
+        });
+
+        /* ========== Toast ========== */
+        function showToast(msg) {
+            var t = document.getElementById('toast');
+            t.textContent = msg; t.classList.add('show');
+            setTimeout(function() { t.classList.remove('show'); }, 2000);
+        }
+
+        /* ========== 购买按钮 ========== */
+        document.getElementById('btnBuy').addEventListener('click', openModal);
+
+        updateQtyUI();
+    })();
+    </script>
+</body>
+</html>

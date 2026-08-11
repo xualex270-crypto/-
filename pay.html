@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>确认支付</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+        :root { --bg:#f7f4ef; --text:#3a3028; --muted:#8a7a68; --accent:#b48648; --card:#fffdf9; --border:#e5ddd0; }
+        body { font-family:"PingFang SC","Microsoft YaHei","Noto Sans SC",-apple-system,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; line-height:1.8; letter-spacing:.04em; }
+        body.fading-out { animation:blurOut 0.5s ease-in forwards; }
+        body.fading-out-fast { animation:blurOut 0.2s ease-in forwards; }
+        @keyframes blurOut { 0%{filter:blur(0);opacity:1} 100%{filter:blur(18px);opacity:1} }
+
+        .main { max-width:420px; margin:0 auto; padding:0 28px 80px; }
+
+        .back-link { display:inline-flex; align-items:center; gap:6px; padding:24px 0 8px; font-size:.85rem; color:var(--muted); cursor:pointer; user-select:none; letter-spacing:.06em; transition:color .3s; text-decoration:none; }
+        .back-link:hover { color:var(--accent); }
+
+        .hero { display:flex; flex-direction:column; align-items:center; padding:36px 0 28px; }
+        .cover-img { width:120px; height:168px; object-fit:cover; border-radius:2px 8px 8px 2px; box-shadow:0 12px 32px rgba(80,50,20,.16),0 2px 6px rgba(80,50,20,.08); border-left:3px solid rgba(0,0,0,.10); display:block; }
+
+        .book-name { text-align:center; font-family:"SimSun","KaiTi","STKaiti",serif; font-size:1.2rem; letter-spacing:.14em; margin:16px 0 4px; }
+        .book-author { text-align:center; font-size:.82rem; color:var(--muted); }
+
+        .section { background:var(--card); border-radius:12px; padding:18px 20px; margin-bottom:12px; box-shadow:0 1px 10px rgba(120,80,40,.05); border:1px solid var(--border); }
+        .section-label { font-size:.7rem; color:#b0a090; letter-spacing:.10em; margin-bottom:12px; }
+
+        .pay-option { display:flex; align-items:center; gap:12px; padding:12px 12px; border-radius:10px; border:1px solid var(--border); margin-bottom:8px; cursor:pointer; transition:all .25s; user-select:none; }
+        .pay-option:last-child { margin-bottom:0; }
+        .pay-option.active { border-color:var(--accent); background:rgba(180,134,72,.05); }
+        .pay-icon { width:30px; height:30px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:.95rem; flex-shrink:0; font-weight:bold; }
+        .pay-icon.wx { background:#e8f5e9; color:#07c160; }
+        .pay-icon.ali { background:#e3f2fd; color:#1677ff; }
+        .pay-name { font-size:.88rem; }
+        .pay-radio { margin-left:auto; width:20px; height:20px; border-radius:50%; border:2px solid #d0c8b8; display:flex; align-items:center; justify-content:center; transition:all .25s; }
+        .pay-option.active .pay-radio { border-color:var(--accent); background:var(--accent); }
+        .pay-radio::after { content:""; width:5px; height:9px; border:solid #fff; border-width:0 2px 2px 0; transform:rotate(45deg) translateY(-1px); opacity:0; }
+        .pay-option.active .pay-radio::after { opacity:1; }
+
+        .price-row { display:flex; justify-content:space-between; align-items:center; padding:4px 0; }
+        .price-row .lbl { font-size:.85rem; color:var(--muted); }
+        .price-row .val { font-family:"Georgia",serif; font-size:1.4rem; color:#6a4020; font-weight:600; }
+
+        .btn-pay { display:block; width:100%; padding:14px 0; border-radius:26px; border:none; font-size:1rem; letter-spacing:.12em; font-family:"SimSun","KaiTi","STKaiti",serif; cursor:pointer; transition:all .4s; user-select:none; margin-top:18px; background:linear-gradient(135deg,#b48648,#9a6a38); color:#fff; box-shadow:0 4px 18px rgba(140,100,50,.25); }
+        .btn-pay:active { transform:scale(.97); }
+
+        .modal-overlay { position:fixed; inset:0; z-index:200; background:rgba(30,20,10,.55); display:none; align-items:center; justify-content:center; backdrop-filter:blur(3px); }
+        .modal-overlay.show { display:flex; }
+        .modal-dialog { width:280px; background:#fffdf9; border-radius:16px; padding:36px 24px 28px; text-align:center; box-shadow:0 20px 50px rgba(40,20,0,.25); animation:modalIn .35s ease-out; }
+        @keyframes modalIn { from{opacity:0;transform:translateY(24px) scale(.94)} to{opacity:1;transform:translateY(0) scale(1)} }
+        .done-icon { width:56px; height:56px; border-radius:50%; background:#e8f5e9; margin:0 auto 16px; display:flex; align-items:center; justify-content:center; font-size:1.8rem; color:#07c160; }
+        .modal-dialog h3 { font-family:"SimSun","KaiTi","STKaiti",serif; font-size:1.1rem; letter-spacing:.08em; margin-bottom:18px; }
+        .btn-done { display:block; width:100%; padding:12px 0; border-radius:22px; border:none; background:linear-gradient(135deg,#b48648,#9a6a38); color:#fff; font-size:.9rem; letter-spacing:.1em; font-family:"SimSun","KaiTi","STKaiti",serif; cursor:pointer; }
+
+        @media(max-width:380px){ .main{padding:0 20px 60px} }
+    </style>
+</head>
+<body>
+<div class="main">
+    <a class="back-link" href="javascript:void(0)"><span>←</span> 返回</a>
+
+    <div class="hero">
+        <img class="cover-img" id="payCover" src="" alt="">
+    </div>
+    <div class="book-name" id="payBook"></div>
+    <div class="book-author">半朵忍冬 · 著</div>
+
+    <div class="section" style="margin-top:22px;">
+        <div class="section-label">支付方式</div>
+        <div class="pay-option active" data-method="wx">
+            <div class="pay-icon wx">微</div><span class="pay-name">微信支付</span><div class="pay-radio"></div>
+        </div>
+        <div class="pay-option" data-method="ali">
+            <div class="pay-icon ali">支</div><span class="pay-name">支付宝</span><div class="pay-radio"></div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="price-row"><span class="lbl">单价</span><span class="val" id="payUnitPrice"></span></div>
+        <div class="price-row"><span class="lbl">数量</span><span class="val" style="font-size:1rem;font-weight:400;" id="payQty"></span></div>
+        <div class="price-row" style="border-top:1px solid var(--border);margin-top:8px;padding-top:10px;"><span class="lbl">合计</span><span class="val" id="payTotal"></span></div>
+    </div>
+
+    <button class="btn-pay" id="btnPay">立即支付</button>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal-dialog">
+        <div class="done-icon">✓</div>
+        <h3>支付成功</h3>
+        <div style="font-size:.82rem;color:#8a7a68;margin-bottom:22px;">感谢购买，您的订单已生成。</div>
+        <button class="btn-done" id="btnDone">返回丛书</button>
+    </div>
+</div>
+
+<script>
+(function(){
+var params=new URLSearchParams(window.location.search);
+var book=params.get('book')||'不说';
+var price=parseFloat(params.get('price'))||39.80;
+var qty=parseInt(params.get('qty'))||1;
+var cover=params.get('cover')||'cover.jpg';
+var total=(price*qty).toFixed(2);
+
+document.getElementById('payCover').src=cover;
+document.getElementById('payBook').textContent='《'+book+'》';
+document.getElementById('payUnitPrice').textContent='¥'+price.toFixed(2);
+document.getElementById('payQty').textContent='× '+qty+' 本';
+document.getElementById('payTotal').textContent='¥'+total;
+
+var opts=document.querySelectorAll('.pay-option');
+opts.forEach(function(o){o.addEventListener('click',function(){opts.forEach(function(x){x.classList.remove('active');});this.classList.add('active');});});
+
+// 返回按钮 — 淡出
+var backLink=document.querySelector('.back-link');
+backLink.addEventListener('click',function(e){e.preventDefault();document.body.classList.add('fading-out-fast');setTimeout(function(){history.back();},200);});
+
+// 返回丛书 — 淡出
+function goSeries(){document.body.classList.add('fading-out-fast');setTimeout(function(){window.location.href='series.html';},200);}
+
+var overlay=document.getElementById('modalOverlay');
+document.getElementById('btnPay').addEventListener('click',function(){overlay.classList.add('show');});
+document.getElementById('btnDone').addEventListener('click',goSeries);
+overlay.addEventListener('click',function(e){if(e.target===overlay){overlay.classList.remove('show');goSeries();}});
+})();
+</script>
+</body>
+</html>
