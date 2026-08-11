@@ -55,6 +55,7 @@
 
         @media(max-width:380px){ .main{padding:0 20px 60px} }
     </style>
+<script>var p=new URLSearchParams(location.search);var _book=p.get('book')||'不说';var _price=parseFloat(p.get('price'))||39.80;var _qty=parseInt(p.get('qty'))||1;var _cover=p.get('cover')||'cover.jpg';var _total=(_price*_qty).toFixed(2);</script>
 </head>
 <body>
 <div class="main">
@@ -62,6 +63,7 @@
 
     <div class="hero">
         <img class="cover-img" id="payCover" src="" alt="">
+        <script>document.getElementById('payCover').src=_cover;</script>
     </div>
     <div class="book-name" id="payBook"></div>
     <div class="book-author">半朵忍冬 · 著</div>
@@ -96,18 +98,10 @@
 
 <script>
 (function(){
-var params=new URLSearchParams(window.location.search);
-var book=params.get('book')||'不说';
-var price=parseFloat(params.get('price'))||39.80;
-var qty=parseInt(params.get('qty'))||1;
-var cover=params.get('cover')||'cover.jpg';
-var total=(price*qty).toFixed(2);
-
-document.getElementById('payCover').src=cover;
-document.getElementById('payBook').textContent='《'+book+'》';
-document.getElementById('payUnitPrice').textContent='¥'+price.toFixed(2);
-document.getElementById('payQty').textContent='× '+qty+' 本';
-document.getElementById('payTotal').textContent='¥'+total;
+document.getElementById('payBook').textContent='《'+_book+'》';
+document.getElementById('payUnitPrice').textContent='¥'+_price.toFixed(2);
+document.getElementById('payQty').textContent='× '+_qty+' 本';
+document.getElementById('payTotal').textContent='¥'+_total;
 
 var opts=document.querySelectorAll('.pay-option');
 opts.forEach(function(o){o.addEventListener('click',function(){opts.forEach(function(x){x.classList.remove('active');});this.classList.add('active');});});
