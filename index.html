@@ -67,7 +67,7 @@ function tryUnlock() {
         document.body.style.opacity = '0';
         setTimeout(function(){ window.location.href = 'main.html'; }, 500);
     } else if (input.value.length > 0) {
-        hint.textContent = '密码错误';
+        hint.textContent = '不关你事';
         hint.classList.add('error');
         input.value = '';
         input.focus();
